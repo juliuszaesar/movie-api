@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"movie-api/internal/data"
+	"movie-api/internal/validator"
 	"net/http"
 	"time"
 )
 
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
+	// Decoding into an intermediary struct prevents clients from setting
+	// unwanted fields like ID and Version directly in the Movie struct.
 	var input struct {
 		Title   string       `json:"title"`
 		Year    int32        `json:"year"`
@@ -20,6 +23,21 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
+
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+	// Initializing here and passing to ValidateMovie, we need to call multiple validation helpers, it gives us more flexibility
+	v := validator.New()
+
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
 	fmt.Fprintf(w, "%+v\n", input)
 }
 
