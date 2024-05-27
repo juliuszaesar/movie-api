@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"movie-api/internal/data"
 	"net/http"
 	"os"
 	"time"
@@ -29,6 +30,7 @@ type config struct {
 type application struct {
 	logger *slog.Logger
 	config config
+	models data.Models
 }
 
 func main() {
@@ -58,6 +60,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	srv := &http.Server{
